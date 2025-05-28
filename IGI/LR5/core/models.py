@@ -234,4 +234,71 @@ class Order(models.Model):
     def save(self, *args, **kwargs):
         if not self.price:
             self.price = self.calculate_price()
-        super().save(*args, **kwargs) 
+        super().save(*args, **kwargs)
+
+class News(models.Model):
+    """Новости"""
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    content = models.TextField(blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True)
+    source_name = models.CharField(max_length=100, default='Unknown')
+    source_url = models.URLField(blank=True, null=True)
+    published_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name_plural = "News"
+        ordering = ['-published_at']
+    
+    def __str__(self):
+        return self.title
+
+class FAQ(models.Model):
+    """Часто задаваемые вопросы"""
+    question = models.CharField('Вопрос', max_length=255)
+    answer = models.TextField('Ответ')
+    created_at = models.DateTimeField('Добавлено', auto_now_add=True)
+    is_published = models.BooleanField('Опубликовано', default=True)
+    
+    class Meta:
+        verbose_name = 'Вопрос'
+        verbose_name_plural = 'Вопросы'
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return self.question
+
+class Job(models.Model):
+    """Вакансии"""
+    title = models.CharField('Название', max_length=200)
+    description = models.TextField('Описание')
+    requirements = models.TextField('Требования')
+    salary_from = models.DecimalField('Зарплата от', max_digits=10, decimal_places=2, null=True, blank=True)
+    salary_to = models.DecimalField('Зарплата до', max_digits=10, decimal_places=2, null=True, blank=True)
+    is_active = models.BooleanField('Активна', default=True)
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Вакансия'
+        verbose_name_plural = 'Вакансии'
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return self.title
+
+class Review(models.Model):
+    """Отзывы"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь')
+    text = models.TextField('Текст отзыва')
+    rating = models.PositiveSmallIntegerField('Оценка', validators=[MinValueValidator(1), MaxValueValidator(5)])
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+    is_published = models.BooleanField('Опубликовано', default=True)
+    
+    class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f'Отзыв от {self.user.get_full_name() or self.user.username}' 

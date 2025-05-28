@@ -27,10 +27,24 @@ urlpatterns = [
     ), name='logout'),
     path('register/', views.register_view, name='register'),
     
+    # Новости
+    path('news/', views.NewsListView.as_view(), name='news-list'),
+    path('news/<int:pk>/', views.NewsDetailView.as_view(), name='news-detail'),
+    
+    # FAQ и политика
+    path('faq/', views.FAQListView.as_view(), name='faq-list'),
+    path('privacy/', views.PrivacyPolicyView.as_view(), name='privacy-policy'),
+    
+    # Вакансии
+    path('jobs/', views.JobListView.as_view(), name='job-list'),
+    
+    # Отзывы
+    path('reviews/', views.ReviewListView.as_view(), name='review-list'),
+    path('reviews/new/', views.ReviewCreateView.as_view(), name='review-create'),
+    
     # Публичные URL
     path('public/vehicles/', views.PublicVehicleListView.as_view(), name='public-vehicle-list'),
     path('public/drivers/', views.PublicDriverListView.as_view(), name='public-driver-list'),
     path('public/services/', views.PublicServiceListView.as_view(), name='public-service-list'),
-    path('public/promotions/', views.PublicPromotionListView.as_view(), name='public-promotion-list'),
-    path('public/coupons/', views.PublicCouponListView.as_view(), name='public-coupon-list'),
+    path('public/promotions-and-coupons/', views.PromotionCouponListView.as_view(), name='promotion-coupon-list'),
 ] 

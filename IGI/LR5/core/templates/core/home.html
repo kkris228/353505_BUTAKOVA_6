@@ -90,29 +90,15 @@
             <h2 class="text-center mb-4">Акции и скидки</h2>
         </div>
         
-        <!-- Промокоды -->
-        <div class="col-md-6 mb-4">
+        <!-- Промокоды и купоны -->
+        <div class="col-12 mb-4">
             <div class="card h-100 shadow">
                 <div class="card-body text-center">
-                    <i class="bi bi-tag display-4 mb-3 text-success"></i>
-                    <h4 class="card-title">Действующие промокоды</h4>
-                    <p class="card-text">Воспользуйтесь скидками по нашим промокодам.</p>
+                    <i class="bi bi-tags display-4 mb-3 text-success"></i>
+                    <h4 class="card-title">Действующие акции и купоны</h4>
+                    <p class="card-text">Воспользуйтесь скидками и специальными предложениями для наших клиентов.</p>
                     <div class="mt-auto">
-                        <a href="{% url 'public-promotion-list' %}" class="btn btn-outline-success">Посмотреть промокоды</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Купоны -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow">
-                <div class="card-body text-center">
-                    <i class="bi bi-ticket-perforated display-4 mb-3 text-success"></i>
-                    <h4 class="card-title">Купоны на скидку</h4>
-                    <p class="card-text">Специальные предложения и купоны для наших клиентов.</p>
-                    <div class="mt-auto">
-                        <a href="{% url 'public-coupon-list' %}" class="btn btn-outline-success">Посмотреть купоны</a>
+                        <a href="{% url 'promotion-coupon-list' %}" class="btn btn-outline-success">Посмотреть акции и купоны</a>
                     </div>
                 </div>
             </div>

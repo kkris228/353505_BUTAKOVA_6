@@ -30,6 +30,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'news-list' %}">
+                            <i class="bi bi-newspaper"></i> Новости
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'public-vehicle-list' %}">
                             <i class="bi bi-truck"></i> Автопарк
                         </a>
@@ -45,13 +50,23 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'public-promotion-list' %}">
-                            <i class="bi bi-tag"></i> Акции
+                        <a class="nav-link" href="{% url 'promotion-coupon-list' %}">
+                            <i class="bi bi-tag"></i> Акции и купоны
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'public-coupon-list' %}">
-                            <i class="bi bi-ticket-perforated"></i> Купоны
+                        <a class="nav-link" href="{% url 'job-list' %}">
+                            <i class="bi bi-briefcase"></i> Вакансии
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'review-list' %}">
+                            <i class="bi bi-star"></i> Отзывы
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'faq-list' %}">
+                            <i class="bi bi-question-circle"></i> Словарь
                         </a>
                     </li>
                     

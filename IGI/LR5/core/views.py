@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -16,9 +16,10 @@ from django import forms
 from .models import (
     Organization, Driver, Vehicle, Client, Order, 
     Promotion, CargoType, Service, VehicleBodyType,
-    Coupon
+    Coupon, News, FAQ, Job, Review
 )
 from .forms import ClientRegistrationForm
+from .services import NewsService, JokeService
 
 class HomeView(ListView):
     """Главная страница"""
@@ -52,6 +53,8 @@ class HomeView(ListView):
             valid_from__lte=now,
             valid_until__gte=now
         ).order_by('-valid_until')[:3]  # 3 активных купона, сортировка по сроку действия
+        
+        context['news'] = News.objects.all()[:5]  # Get latest 5 news articles
         
         return context
 
@@ -444,4 +447,103 @@ class PublicCouponListView(ListView):
             is_active=True,
             valid_from__lte=now,
             valid_until__gte=now
-        ) 
+        )
+
+class NewsListView(ListView):
+    """Список новостей"""
+    model = News
+    template_name = 'core/news_list.html'
+    context_object_name = 'news'
+    paginate_by = 10
+    ordering = ['-published_at']
+
+class NewsDetailView(DetailView):
+    """Детальная страница новости"""
+    model = News
+    template_name = 'core/news_detail.html'
+    context_object_name = 'news'
+
+    def get_queryset(self):
+        return News.objects.filter(is_published=True)
+
+class FAQListView(ListView):
+    """Список вопросов и ответов"""
+    model = FAQ
+    template_name = 'core/faq_list.html'
+    context_object_name = 'faqs'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return FAQ.objects.filter(is_published=True)
+
+class PrivacyPolicyView(TemplateView):
+    """Политика конфиденциальности"""
+    template_name = 'core/privacy_policy.html'
+
+class JobListView(ListView):
+    """Список вакансий"""
+    model = Job
+    template_name = 'core/job_list.html'
+    context_object_name = 'jobs'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Job.objects.filter(is_active=True)
+
+class ReviewListView(ListView):
+    """Список отзывов"""
+    model = Review
+    template_name = 'core/review_list.html'
+    context_object_name = 'reviews'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Review.objects.filter(is_published=True)
+
+class ReviewCreateView(LoginRequiredMixin, CreateView):
+    """Создание отзыва"""
+    model = Review
+    template_name = 'core/review_form.html'
+    fields = ['text', 'rating']
+    success_url = reverse_lazy('review-list')
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        messages.success(self.request, 'Спасибо за ваш отзыв!')
+        return super().form_valid(form)
+
+# Объединенный список акций и купонов
+class PromotionCouponListView(ListView):
+    """Список акций и купонов"""
+    template_name = 'core/promotion_coupon_list.html'
+    context_object_name = 'items'
+
+    def get_queryset(self):
+        now = timezone.now()
+        promotions = Promotion.objects.filter(
+            is_active=True,
+            valid_from__lte=now,
+            valid_until__gte=now
+        )
+        coupons = Coupon.objects.filter(
+            is_active=True,
+            valid_from__lte=now,
+            valid_until__gte=now
+        )
+        return {
+            'promotions': promotions,
+            'coupons': coupons
+        }
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['joke'] = JokeService.get_random_joke()
+        return context
+
+def home(request):
+    context = {
+        'total_orders': Order.objects.count() if 'Order' in globals() else 0,
+        'active_drivers': Driver.objects.filter(is_active=True).count() if 'Driver' in globals() else 0,
+        'available_vehicles': Vehicle.objects.filter(is_available=True).count() if 'Vehicle' in globals() else 0,
+    }
+    return render(request, 'core/home.html', context) 
