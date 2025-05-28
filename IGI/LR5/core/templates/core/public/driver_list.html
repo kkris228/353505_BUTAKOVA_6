@@ -1,0 +1,35 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Наши водители</h2>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for driver in drivers %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ driver.user.get_full_name }}</h5>
+                    <p class="card-text">
+                        <strong>Стаж:</strong> {{ driver.experience }} лет<br>
+                        <strong>Возраст:</strong> {{ driver.age }} лет<br>
+                        <strong>Статус:</strong> 
+                        {% if driver.is_available %}
+                            <span class="badge bg-success">Доступен</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Занят</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Водители не найдены
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

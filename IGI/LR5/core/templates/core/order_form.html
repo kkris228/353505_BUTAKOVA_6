@@ -1,0 +1,113 @@
+{% extends 'core/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{% if form.instance.pk %}Редактировать заказ{% else %}Новый заказ{% endif %}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Информация о грузе -->
+                        <h5 class="mb-3">Информация о грузе</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.service|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.cargo_type|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.weight|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Маршрут -->
+                        <h5 class="mt-4 mb-3">Маршрут</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.pickup_address|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.delivery_address|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.pickup_date|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        {% if user.is_superuser %}
+                        <!-- Назначение (только для администратора) -->
+                        <h5 class="mt-4 mb-3">Назначение</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.driver|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.vehicle|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.status|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.price|as_crispy_field }}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if form.instance.pk %}
+                        <!-- Оценка и отзыв -->
+                        <h5 class="mt-4 mb-3">Оценка</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.rating|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.feedback|as_crispy_field }}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'order-list' %}" class="btn btn-secondary me-md-2">Отмена</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}Сохранить изменения{% else %}Создать заказ{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Скрипт для автоматического расчета стоимости -->
+{% if user.is_superuser %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const weightInput = document.getElementById('id_weight');
+    const cargoTypeSelect = document.getElementById('id_cargo_type');
+    const serviceSelect = document.getElementById('id_service');
+    const priceInput = document.getElementById('id_price');
+    
+    function calculatePrice() {
+        const weight = parseFloat(weightInput.value) || 0;
+        if (weight && cargoTypeSelect.value && serviceSelect.value) {
+            // Цена будет рассчитана автоматически на сервере
+            // при сохранении заказа
+            priceInput.value = '0.00';
+        }
+    }
+    
+    weightInput.addEventListener('input', calculatePrice);
+    cargoTypeSelect.addEventListener('change', calculatePrice);
+    serviceSelect.addEventListener('change', calculatePrice);
+});
+</script>
+{% endif %}
+{% endblock %} 

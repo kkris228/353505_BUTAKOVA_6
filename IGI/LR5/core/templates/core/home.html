@@ -1,0 +1,186 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="text-center mb-5">
+        <h1 class="display-4">Добро пожаловать в систему грузоперевозок!</h1>
+        <p class="lead">Мы предоставляем надежные услуги по перевозке грузов по всей стране.</p>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title">Всего заказов</h3>
+                    <p class="display-4">{{ total_orders|default:"0" }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title">Активных водителей</h3>
+                    <p class="display-4">{{ active_drivers|default:"0" }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title">Доступно транспорта</h3>
+                    <p class="display-4">{{ available_vehicles|default:"0" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Публичная информация -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Информация о компании</h2>
+        </div>
+        
+        <!-- Транспорт -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-truck display-4 mb-3 text-primary"></i>
+                    <h4 class="card-title">Наш автопарк</h4>
+                    <p class="card-text">Ознакомьтесь с нашим современным автопарком грузовых автомобилей.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'public-vehicle-list' %}" class="btn btn-outline-primary">Посмотреть транспорт</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Водители -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-badge display-4 mb-3 text-primary"></i>
+                    <h4 class="card-title">Наши водители</h4>
+                    <p class="card-text">Опытные профессиональные водители с многолетним стажем.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'public-driver-list' %}" class="btn btn-outline-primary">Посмотреть водителей</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Услуги -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-gear display-4 mb-3 text-primary"></i>
+                    <h4 class="card-title">Услуги</h4>
+                    <p class="card-text">Широкий спектр услуг по грузоперевозкам с гибкими ценами.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'public-service-list' %}" class="btn btn-outline-primary">Посмотреть услуги</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Акции и скидки -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Акции и скидки</h2>
+        </div>
+        
+        <!-- Промокоды -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-tag display-4 mb-3 text-success"></i>
+                    <h4 class="card-title">Действующие промокоды</h4>
+                    <p class="card-text">Воспользуйтесь скидками по нашим промокодам.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'public-promotion-list' %}" class="btn btn-outline-success">Посмотреть промокоды</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Купоны -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-ticket-perforated display-4 mb-3 text-success"></i>
+                    <h4 class="card-title">Купоны на скидку</h4>
+                    <p class="card-text">Специальные предложения и купоны для наших клиентов.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'public-coupon-list' %}" class="btn btn-outline-success">Посмотреть купоны</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Для клиентов и водителей -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Личный кабинет</h2>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <h4 class="card-title"><i class="bi bi-person"></i> Для клиентов</h4>
+                    <p class="card-text">Создавайте заказы и отслеживайте их выполнение в режиме реального времени.</p>
+                    <div class="mt-auto">
+                        {% if user.is_authenticated and user.client %}
+                            <a href="{% url 'order-create' %}" class="btn btn-primary">Создать заказ</a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-primary">Войти</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <h4 class="card-title"><i class="bi bi-truck"></i> Для водителей</h4>
+                    <p class="card-text">Управляйте своими заказами и просматривайте маршруты доставки.</p>
+                    <div class="mt-auto">
+                        {% if user.is_authenticated and user.driver %}
+                            <a href="{% url 'order-list' %}" class="btn btn-primary">Мои заказы</a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-primary">Войти</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <p class="text-muted">© {% now "Y" %} Грузоперевозки. Все права защищены.</p>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.card-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.mt-auto {
+    margin-top: auto;
+}
+.shadow {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
+}
+</style>
+{% endblock %} 

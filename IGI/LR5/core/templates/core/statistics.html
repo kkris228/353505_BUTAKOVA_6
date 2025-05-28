@@ -1,0 +1,243 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Статистика и аналитика</h2>
+
+    <!-- Основные показатели -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Всего заказов</h5>
+                    <p class="display-4 mb-0">{{ total_orders }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Общая выручка</h5>
+                    <p class="display-4 mb-0">{{ total_revenue|floatformat:2 }} BYN</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Средний чек</h5>
+                    <p class="display-4 mb-0">{{ avg_order_cost|floatformat:2 }} BYN</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Активных заказов</h5>
+                    <p class="display-4 mb-0">{{ active_orders }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Графики -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Динамика заказов</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="ordersChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Динамика выручки</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика по грузам -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Статистика по типам грузов</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Тип груза</th>
+                            <th>Количество заказов</th>
+                            <th>Общий вес (кг)</th>
+                            <th>Средняя стоимость</th>
+                            <th>Доля заказов</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in cargo_stats %}
+                        <tr>
+                            <td>{{ stat.cargo_type__name }}</td>
+                            <td>{{ stat.order_count }}</td>
+                            <td>{{ stat.total_weight|floatformat:1 }} кг</td>
+                            <td>{{ stat.avg_cost|floatformat:2 }} BYN</td>
+                            <td>
+                                {% widthratio stat.order_count total_orders 100 as percentage %}
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ percentage }}%"
+                                         aria-valuenow="{{ percentage }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ percentage }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика по водителям -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Топ водителей</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Водитель</th>
+                            <th>Выполнено заказов</th>
+                            <th>Общая выручка</th>
+                            <th>Рейтинг</th>
+                            <th>Эффективность</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in driver_stats %}
+                        <tr>
+                            <td>{{ stat.driver__user__first_name }} {{ stat.driver__user__last_name }}</td>
+                            <td>{{ stat.order_count }}</td>
+                            <td>{{ stat.total_revenue|floatformat:2 }} BYN</td>
+                            <td>
+                                {% if stat.avg_rating %}
+                                <div class="stars">
+                                    {% with ''|center:5 as range %}
+                                    {% for _ in range %}
+                                        <i class="bi bi-star{% if forloop.counter <= stat.avg_rating %}-fill{% endif %} text-warning"></i>
+                                    {% endfor %}
+                                    {% endwith %}
+                                </div>
+                                {% else %}
+                                <span class="text-muted">Нет оценок</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% widthratio stat.rating|default:0 1 1 as efficiency %}
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ efficiency }}%"
+                                         aria-valuenow="{{ efficiency }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ efficiency }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // График заказов
+    const ordersCtx = document.getElementById('ordersChart').getContext('2d');
+    new Chart(ordersCtx, {
+        type: 'line',
+        data: {
+            labels: {{ months|safe }},
+            datasets: [{
+                label: 'Количество заказов',
+                data: {{ orders_by_month|safe }},
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Количество заказов по месяцам'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // График выручки
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ months|safe }},
+            datasets: [{
+                label: 'Выручка (BYN)',
+                data: {{ revenue_by_month|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Выручка по месяцам'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' BYN';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

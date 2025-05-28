@@ -1,0 +1,59 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Профиль пользователя</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col">
+                            <h4 class="mb-3">{{ user.get_full_name }}</h4>
+                            <p class="text-muted mb-2">@{{ user.username }}</p>
+                            <p class="mb-2"><i class="bi bi-envelope me-2"></i>{{ user.email }}</p>
+                            {% if user.client %}
+                                <p class="mb-2"><i class="bi bi-telephone me-2"></i>{{ user.client.phone }}</p>
+                                <p class="mb-2"><i class="bi bi-calendar me-2"></i>Дата рождения: {{ user.client.birth_date|date:"d.m.Y" }}</p>
+                                <p class="mb-2"><i class="bi bi-clock-history me-2"></i>Дата регистрации: {{ user.client.created_at|date:"d.m.Y H:i" }}</p>
+                                {% if user.client.organization %}
+                                    <hr>
+                                    <h5 class="mb-3">Информация об организации</h5>
+                                    <p class="mb-2"><i class="bi bi-building me-2"></i>{{ user.client.organization.name }}</p>
+                                    <p class="mb-2"><i class="bi bi-geo-alt me-2"></i>{{ user.client.organization.address }}</p>
+                                    <p class="mb-2"><i class="bi bi-telephone me-2"></i>{{ user.client.organization.phone }}</p>
+                                    <p class="mb-2"><i class="bi bi-envelope me-2"></i>{{ user.client.organization.email }}</p>
+                                {% endif %}
+                            {% endif %}
+                            {% if user.driver %}
+                                <p class="mb-2"><i class="bi bi-telephone me-2"></i>{{ user.driver.phone }}</p>
+                                <p class="mb-2"><i class="bi bi-calendar me-2"></i>Дата рождения: {{ user.driver.birth_date|date:"d.m.Y" }}</p>
+                                <p class="mb-2"><i class="bi bi-clock-history me-2"></i>Дата регистрации: {{ user.driver.created_at|date:"d.m.Y H:i" }}</p>
+                                <p class="mb-2"><i class="bi bi-card-text me-2"></i>Номер лицензии: {{ user.driver.license_number }}</p>
+                                <p class="mb-2"><i class="bi bi-clock-history me-2"></i>Стаж: {{ user.driver.experience }} лет</p>
+                                <p class="mb-2">
+                                    <i class="bi bi-circle-fill me-2 {% if user.driver.is_available %}text-success{% else %}text-secondary{% endif %}"></i>
+                                    Статус: {% if user.driver.is_available %}Доступен{% else %}Занят{% endif %}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>На главную
+                        </a>
+                        {% if user.client %}
+                            <a href="{% url 'order-list' %}" class="btn btn-primary">
+                                <i class="bi bi-list-ul me-2"></i>Мои заказы
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

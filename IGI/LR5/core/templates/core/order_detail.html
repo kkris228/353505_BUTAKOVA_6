@@ -1,0 +1,168 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Основная информация о заказе -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Заказ #{{ order.id }}</h4>
+                    <span class="badge bg-{{ status_class }}">{{ order.get_status_display }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Информация о грузе</h5>
+                            <dl class="row">
+                                <dt class="col-sm-4">Тип груза</dt>
+                                <dd class="col-sm-8">{{ order.cargo_type.name }}</dd>
+                                
+                                <dt class="col-sm-4">Вес</dt>
+                                <dd class="col-sm-8">{{ order.weight }} кг</dd>
+                                
+                                <dt class="col-sm-4">Описание</dt>
+                                <dd class="col-sm-8">{{ order.description|default:"Не указано" }}</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Маршрут</h5>
+                            <dl class="row">
+                                <dt class="col-sm-4">Откуда</dt>
+                                <dd class="col-sm-8">{{ order.pickup_address }}</dd>
+                                
+                                <dt class="col-sm-4">Куда</dt>
+                                <dd class="col-sm-8">{{ order.delivery_address }}</dd>
+                                
+                                <dt class="col-sm-4">Загрузка</dt>
+                                <dd class="col-sm-8">{{ order.pickup_date }}</dd>
+                                
+                                <dt class="col-sm-4">Доставка</dt>
+                                <dd class="col-sm-8">{{ order.delivery_date|default:"Не указано" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Информация о перевозке -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Информация о перевозке</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Водитель</h6>
+                            {% if order.driver %}
+                            <dl class="row">
+                                <dt class="col-sm-4">ФИО</dt>
+                                <dd class="col-sm-8">{{ order.driver.user.get_full_name }}</dd>
+                                
+                                <dt class="col-sm-4">Телефон</dt>
+                                <dd class="col-sm-8">{{ order.driver.phone }}</dd>
+                                
+                                <dt class="col-sm-4">Стаж</dt>
+                                <dd class="col-sm-8">{{ order.driver.experience }} лет</dd>
+                            </dl>
+                            {% else %}
+                            <p class="text-muted">Водитель не назначен</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Транспорт</h6>
+                            {% if order.vehicle %}
+                            <dl class="row">
+                                <dt class="col-sm-4">Модель</dt>
+                                <dd class="col-sm-8">{{ order.vehicle.model }}</dd>
+                                
+                                <dt class="col-sm-4">Номер</dt>
+                                <dd class="col-sm-8">{{ order.vehicle.plate_number }}</dd>
+                                
+                                <dt class="col-sm-4">Тип кузова</dt>
+                                <dd class="col-sm-8">{{ order.vehicle.body_type.name }}</dd>
+                            </dl>
+                            {% else %}
+                            <p class="text-muted">Транспорт не назначен</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Стоимость -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Стоимость</h5>
+                </div>
+                <div class="card-body">
+                    <h2 class="display-6 mb-3">{{ order.cost|default:"0"|floatformat:2 }} BYN</h2>
+                    {% if order.cost %}
+                    <dl class="row">
+                        <dt class="col-sm-6">За километр</dt>
+                        <dd class="col-sm-6">{{ cost_per_km|floatformat:2 }} BYN/км</dd>
+                        
+                        <dt class="col-sm-6">За килограмм</dt>
+                        <dd class="col-sm-6">{{ cost_per_kg|floatformat:2 }} BYN/кг</dd>
+                    </dl>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Оценка и отзыв -->
+            {% if order.status == 'completed' %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Оценка заказа</h5>
+                </div>
+                <div class="card-body">
+                    {% if order.rating %}
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2">
+                                <strong>Оценка:</strong>
+                            </div>
+                            <div class="stars">
+                                {% for i in "12345"|make_list %}
+                                <i class="bi bi-star{% if forloop.counter <= order.rating %}-fill{% endif %} text-warning"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if order.feedback %}
+                        <div>
+                            <strong>Отзыв:</strong>
+                            <p class="mb-0">{{ order.feedback }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Заказ еще не оценен</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Действия -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Действия</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if user.is_superuser %}
+                        <a href="{% url 'admin:core_order_change' order.id %}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'order-list' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> К списку заказов
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
