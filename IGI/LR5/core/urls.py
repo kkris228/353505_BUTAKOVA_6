@@ -10,12 +10,19 @@ urlpatterns = [
     
     # Заказы
     path('orders/', views.OrderListView.as_view(), name='order-list'),
-    path('orders/new/', views.OrderCreateView.as_view(), name='order-create'),
+    path('orders/create/', views.OrderCreateView.as_view(), name='order-create'),
     path('orders/<int:pk>/', views.OrderDetailView.as_view(), name='order-detail'),
     
-    # Водители и транспорт
-    path('drivers/', views.DriverListView.as_view(), name='driver-list'),
+    # Водители
+    path('drivers/', views.driver_list, name='driver-list'),
+    path('drivers/create/', views.driver_create, name='driver-create'),
+    path('drivers/<int:pk>/update/', views.driver_update, name='driver-update'),
+    path('drivers/<int:pk>/delete/', views.driver_delete, name='driver-delete'),
+    
+    # Транспорт
     path('vehicles/', views.VehicleListView.as_view(), name='vehicle-list'),
+    path('vehicles/create/', views.VehicleCreateView.as_view(), name='vehicle-create'),
+    path('vehicles/<int:pk>/update/', views.VehicleUpdateView.as_view(), name='vehicle-update'),
     
     # Статистика
     path('statistics/', views.StatisticsView.as_view(), name='statistics'),
@@ -29,7 +36,9 @@ urlpatterns = [
     
     # Новости
     path('news/', views.NewsListView.as_view(), name='news-list'),
+    path('news/create/', views.NewsCreateView.as_view(), name='news-create'),
     path('news/<int:pk>/', views.NewsDetailView.as_view(), name='news-detail'),
+    path('news/<int:pk>/update/', views.NewsUpdateView.as_view(), name='news-update'),
     
     # FAQ и политика
     path('faq/', views.FAQListView.as_view(), name='faq-list'),
@@ -44,7 +53,7 @@ urlpatterns = [
     
     # Публичные URL
     path('public/vehicles/', views.PublicVehicleListView.as_view(), name='public-vehicle-list'),
-    path('public/drivers/', views.PublicDriverListView.as_view(), name='public-driver-list'),
+    path('public/drivers/', views.public_driver_list, name='public-driver-list'),
     path('public/services/', views.PublicServiceListView.as_view(), name='public-service-list'),
     path('public/promotions-and-coupons/', views.PromotionCouponListView.as_view(), name='promotion-coupon-list'),
 ] 

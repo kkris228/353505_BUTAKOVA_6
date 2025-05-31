@@ -85,29 +85,4 @@
         </div>
     </div>
 </div>
-
-<!-- Скрипт для автоматического расчета стоимости -->
-{% if user.is_superuser %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const weightInput = document.getElementById('id_weight');
-    const cargoTypeSelect = document.getElementById('id_cargo_type');
-    const serviceSelect = document.getElementById('id_service');
-    const priceInput = document.getElementById('id_price');
-    
-    function calculatePrice() {
-        const weight = parseFloat(weightInput.value) || 0;
-        if (weight && cargoTypeSelect.value && serviceSelect.value) {
-            // Цена будет рассчитана автоматически на сервере
-            // при сохранении заказа
-            priceInput.value = '0.00';
-        }
-    }
-    
-    weightInput.addEventListener('input', calculatePrice);
-    cargoTypeSelect.addEventListener('change', calculatePrice);
-    serviceSelect.addEventListener('change', calculatePrice);
-});
-</script>
-{% endif %}
 {% endblock %} 

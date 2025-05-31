@@ -9,21 +9,101 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- FullCalendar CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 0;
+        }
+        .navbar-top {
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .navbar-bottom {
+            padding: 0.5rem 0;
+        }
+        .navbar-nav .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffffff !important;
+        }
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.3rem;
+            margin-right: 2rem;
+        }
+        .btn-create-order {
+            background-color: #ffffff;
+            color: #1e3c72;
+            border: none;
+            padding: 0.5rem 1rem;
+            margin: 0 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+        .btn-create-order:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .dropdown-menu {
+            margin-top: 0.5rem;
+            min-width: 200px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+        }
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        main {
+            flex: 1;
+            margin-top: 1rem;
+        }
+        @media (max-width: 991.98px) {
+            .navbar-nav {
+                padding: 1rem 0;
+            }
+            .auth-nav {
+                padding-top: 0.5rem;
+                border-top: 1px solid rgba(255,255,255,0.1);
+            }
+            .btn-create-order {
+                margin: 0.5rem 0;
+            }
+        }
+    </style>
     
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="debug-info">Using core/templates/core/base.html</div>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="bi bi-truck me-2"></i>Грузоперевозки
+                <i class="bi bi-truck"></i> Грузоперевозки
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
+                    <!-- Основное меню -->
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'home' %}">
                             <i class="bi bi-house"></i> Главная
@@ -51,7 +131,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'promotion-coupon-list' %}">
-                            <i class="bi bi-tag"></i> Акции и купоны
+                            <i class="bi bi-tag"></i> Акции
                         </a>
                     </li>
                     <li class="nav-item">
@@ -69,7 +149,6 @@
                             <i class="bi bi-question-circle"></i> Словарь
                         </a>
                     </li>
-                    
                     {% if user.is_authenticated %}
                         {% if user.is_superuser %}
                         <li class="nav-item">
@@ -105,14 +184,13 @@
                         {% if not user.is_superuser and user.client %}
                             <li class="nav-item">
                                 <a href="{% url 'order-create' %}" class="btn btn-create-order">
-                                    <i class="bi bi-plus-circle"></i>Создать заказ
+                                    <i class="bi bi-plus-circle"></i> Создать заказ
                                 </a>
                             </li>
                         {% endif %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i>
-                                {{ user.get_full_name|default:user.username }}
+                                <i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
@@ -122,7 +200,7 @@
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form method="post" action="{% url 'logout' %}" class="dropdown-item p-0">
+                                    <form method="post" action="{% url 'logout' %}">
                                         {% csrf_token %}
                                         <button type="submit" class="dropdown-item">
                                             <i class="bi bi-box-arrow-right"></i> Выход
@@ -148,32 +226,38 @@
         </div>
     </nav>
 
-    <!-- Сообщения -->
-    {% if messages %}
-    <div class="container">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
+    <main class="container">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
 
-    <!-- Основной контент -->
-    {% block content %}{% endblock %}
+        {% block content %}{% endblock %}
+    </main>
 
-    <!-- Footer -->
     <footer class="footer mt-5 py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">© {% now "Y" %} Система грузоперевозок. Все права защищены.</span>
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <span class="text-muted">© {% now "Y" %} Система грузоперевозок. Все права защищены.</span>
+                    <span class="mx-2">|</span>
+                    <a href="{% url 'privacy-policy' %}" class="text-muted text-decoration-none">Политика конфиденциальности</a>
+                </div>
+            </div>
         </div>
     </footer>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery (если нужен) -->
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/ru.js'></script>
     
     {% block extra_js %}{% endblock %}
 </body>

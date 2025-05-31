@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from datetime import date
+from decimal import Decimal
 
 class Organization(models.Model):
     """Организации"""
@@ -68,6 +69,7 @@ class Driver(models.Model):
     birth_date = models.DateField('Дата рождения')
     is_available = models.BooleanField('Доступен', default=True)
     created_at = models.DateTimeField('Создан', default=timezone.now)
+    photo = models.ImageField('Фотография', upload_to='drivers/', blank=True, null=True)
     
     class Meta:
         verbose_name = 'Водитель'
@@ -173,8 +175,8 @@ class Order(models.Model):
     price = models.DecimalField('Стоимость', max_digits=10, decimal_places=2, null=True, blank=True)
     rating = models.PositiveSmallIntegerField('Оценка', null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
     feedback = models.TextField('Отзыв', null=True, blank=True)
-    created_at = models.DateTimeField('Создан', auto_now_add=True)
-    updated_at = models.DateTimeField('Обновлен', auto_now=True)
+    created_at = models.DateTimeField('Создан', default=timezone.now)
+    updated_at = models.DateTimeField('Обновлен', default=timezone.now)
     completed_at = models.DateTimeField('Выполнен', null=True, blank=True)
     
     class Meta:
@@ -191,45 +193,45 @@ class Order(models.Model):
         base_price = self.service.price
         
         # Стоимость за вес (с уменьшающейся ценой за кг при большом весе)
-        weight_price = 0
+        weight_price = Decimal('0')
         remaining_weight = self.weight
         
         if remaining_weight <= 100:  # До 100 кг - полная цена
-            weight_price = remaining_weight * self.cargo_type.base_price
+            weight_price = Decimal(str(remaining_weight)) * self.cargo_type.base_price
         else:
             # Первые 100 кг по полной цене
-            weight_price = 100 * self.cargo_type.base_price
+            weight_price = Decimal('100') * self.cargo_type.base_price
             remaining_weight -= 100
             
             if remaining_weight <= 400:  # От 100 до 500 кг - 75% цены
-                weight_price += remaining_weight * (self.cargo_type.base_price * 0.75)
+                weight_price += Decimal(str(remaining_weight)) * (self.cargo_type.base_price * Decimal('0.75'))
             else:
                 # От 100 до 500 кг - 75% цены
-                weight_price += 400 * (self.cargo_type.base_price * 0.75)
+                weight_price += Decimal('400') * (self.cargo_type.base_price * Decimal('0.75'))
                 remaining_weight -= 400
                 
                 if remaining_weight <= 500:  # От 500 до 1000 кг - 50% цены
-                    weight_price += remaining_weight * (self.cargo_type.base_price * 0.5)
+                    weight_price += Decimal(str(remaining_weight)) * (self.cargo_type.base_price * Decimal('0.5'))
                 else:
                     # От 500 до 1000 кг - 50% цены
-                    weight_price += 500 * (self.cargo_type.base_price * 0.5)
+                    weight_price += Decimal('500') * (self.cargo_type.base_price * Decimal('0.5'))
                     remaining_weight -= 500
                     
                     # Свыше 1000 кг - 25% цены
-                    weight_price += remaining_weight * (self.cargo_type.base_price * 0.25)
+                    weight_price += Decimal(str(remaining_weight)) * (self.cargo_type.base_price * Decimal('0.25'))
         
         total = base_price + weight_price
         
         # Применяем скидку по промокоду
         if self.promotion and self.promotion.is_active:
-            discount = total * (self.promotion.discount_percent / 100)
+            discount = total * (Decimal(str(self.promotion.discount_percent)) / Decimal('100'))
             total -= discount
             
         # Применяем скидку по купону
         if self.coupon and self.coupon.is_active:
             total -= self.coupon.fixed_discount
             
-        return max(total, 0)  # Стоимость не может быть отрицательной
+        return max(total, Decimal('0'))  # Стоимость не может быть отрицательной
     
     def save(self, *args, **kwargs):
         if not self.price:
@@ -238,18 +240,17 @@ class Order(models.Model):
 
 class News(models.Model):
     """Новости"""
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    content = models.TextField(blank=True, null=True)
-    image_url = models.URLField(blank=True, null=True)
-    source_name = models.CharField(max_length=100, default='Unknown')
-    source_url = models.URLField(blank=True, null=True)
-    published_at = models.DateTimeField(default=timezone.now)
-    created_at = models.DateTimeField(auto_now_add=True)
+    title = models.CharField('Заголовок', max_length=200)
+    description = models.TextField('Краткое описание', default='')
+    content = models.TextField('Содержание', default='')
+    image = models.ImageField('Изображение', upload_to='news/', blank=True, null=True)
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+    is_published = models.BooleanField('Опубликовано', default=True)
     
     class Meta:
-        verbose_name_plural = "News"
-        ordering = ['-published_at']
+        verbose_name = 'Новость'
+        verbose_name_plural = 'Новости'
+        ordering = ['-created_at']
     
     def __str__(self):
         return self.title

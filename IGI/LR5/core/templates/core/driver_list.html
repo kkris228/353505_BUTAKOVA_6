@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Управление водителями</h2>
-        <a href="{% url 'admin:core_driver_add' %}" class="btn btn-primary">
+        <a href="{% url 'driver-create' %}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Добавить водителя
         </a>
     </div>
@@ -22,8 +22,8 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label for="experience" class="form-label">Минимальный стаж</label>
-                    <input type="number" class="form-control" id="experience" name="min_experience" value="{{ request.GET.min_experience }}">
+                    <label for="min_experience" class="form-label">Минимальный стаж</label>
+                    <input type="number" class="form-control" id="min_experience" name="min_experience" value="{{ request.GET.min_experience }}">
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary">Применить фильтры</button>
@@ -32,81 +32,108 @@
         </div>
     </div>
 
-    <!-- Список водителей -->
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>ФИО</th>
-                    <th>Возраст</th>
-                    <th>Стаж</th>
-                    <th>Телефон</th>
-                    <th>Номер лицензии</th>
-                    <th>Статус</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for driver in drivers %}
-                <tr>
-                    <td>{{ driver.user.get_full_name }}</td>
-                    <td>{{ driver.age }} лет</td>
-                    <td>{{ driver.experience }} лет</td>
-                    <td>{{ driver.phone }}</td>
-                    <td>{{ driver.license_number }}</td>
-                    <td>
-                        {% if driver.is_available %}
-                            <span class="badge bg-success">Доступен</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Занят</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div class="btn-group" role="group">
-                            <a href="{% url 'admin:core_driver_change' driver.id %}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a href="{% url 'admin:core_driver_delete' driver.id %}" class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" class="text-center">Водители не найдены</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
     <!-- Статистика -->
-    <div class="row mt-4">
+    <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card">
+            <div class="card bg-primary text-white">
                 <div class="card-body">
                     <h5 class="card-title">Средний возраст</h5>
-                    <p class="card-text display-6">{{ avg_age|default:"0" }} лет</p>
+                    <p class="display-6">{{ avg_age }} лет</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card">
+            <div class="card bg-success text-white">
                 <div class="card-body">
                     <h5 class="card-title">Средний стаж</h5>
-                    <p class="card-text display-6">{{ avg_experience|default:"0" }} лет</p>
+                    <p class="display-6">{{ avg_experience }} лет</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card">
+            <div class="card bg-info text-white">
                 <div class="card-body">
-                    <h5 class="card-title">Доступно водителей</h5>
-                    <p class="card-text display-6">{{ available_count|default:"0" }}</p>
+                    <h5 class="card-title">Доступно</h5>
+                    <p class="display-6">{{ available_count }} чел.</p>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Список водителей -->
+    <div class="row">
+        {% for driver in drivers %}
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            {% if driver.photo %}
+                            <img src="{{ driver.photo.url }}" alt="{{ driver.user.get_full_name }}" class="img-fluid rounded driver-photo">
+                            {% else %}
+                            <div class="driver-photo-placeholder">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <h5 class="card-title mb-1">{{ driver.user.get_full_name }}</h5>
+                            <p class="text-muted mb-0">{{ driver.phone }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Лицензия:</strong> {{ driver.license_number }}</p>
+                            <p class="mb-0"><strong>Стаж:</strong> {{ driver.experience }} лет</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Возраст:</strong> {{ driver.age }} лет</p>
+                            <p class="mb-0">
+                                <strong>Статус:</strong>
+                                <span class="badge {% if driver.is_available %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if driver.is_available %}Доступен{% else %}Занят{% endif %}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <a href="{% url 'driver-update' driver.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil"></i> Редактировать
+                            </a>
+                            <a href="{% url 'driver-delete' driver.pk %}" class="btn btn-outline-danger btn-sm ms-2">
+                                <i class="bi bi-trash"></i> Удалить
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Водители не найдены
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
+
+<style>
+.driver-photo {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+.driver-photo-placeholder {
+    width: 100%;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+}
+.driver-photo-placeholder i {
+    font-size: 4rem;
+    color: #adb5bd;
+}
+</style>
 {% endblock %} 

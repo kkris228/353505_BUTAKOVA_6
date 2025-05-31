@@ -1,77 +1,49 @@
-import os
 import requests
-from datetime import datetime, timedelta
-from django.conf import settings
-from .models import News
 
-class NewsService:
-    API_KEY = settings.NEWS_API_KEY
-    BASE_URL = "https://newsapi.org/v2/everything"
+def get_random_joke():
+    """
+    Получает случайную шутку через API JokeAPI
+    Returns:
+        dict: Словарь с шуткой, содержащий поля:
+            - setup: начало шутки (для двухчастных шуток)
+            - delivery: окончание шутки (для двухчастных шуток)
+            - joke: полная шутка (для одночастных шуток)
+    """
+    url = "https://v2.jokeapi.dev/joke/Programming?safe-mode"
     
-    @classmethod
-    def fetch_transportation_news(cls):
-        # Search query for transportation and logistics news
-        query = "transportation OR logistics OR shipping OR freight OR cargo"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Проверяем на ошибки HTTP
+        data = response.json()
         
-        # Get news from the last 7 days
-        from_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-        
-        params = {
-            'q': query,
-            'apiKey': cls.API_KEY,
-            'language': 'en',
-            'from': from_date,
-            'sortBy': 'publishedAt',
-            'pageSize': 10  # Limit to 10 articles
-        }
-        
-        try:
-            response = requests.get(cls.BASE_URL, params=params)
-            response.raise_for_status()
-            articles = response.json().get('articles', [])
-            
-            # Save articles to database
-            for article in articles:
-                News.objects.get_or_create(
-                    title=article['title'],
-                    defaults={
-                        'description': article.get('description', ''),
-                        'content': article.get('content', ''),
-                        'image_url': article.get('urlToImage'),
-                        'source_name': article['source']['name'],
-                        'source_url': article['url'],
-                        'published_at': datetime.strptime(
-                            article['publishedAt'], 
-                            '%Y-%m-%dT%H:%M:%SZ'
-                        )
-                    }
-                )
-            
-            return True
-            
-        except Exception as e:
-            print(f"Error fetching news: {str(e)}")
-            return False 
-
-class JokeService:
-    """Сервис для получения случайных шуток"""
-    API_URL = "https://official-joke-api.appspot.com/random_joke"
-    
-    @classmethod
-    def get_random_joke(cls):
-        try:
-            response = requests.get(cls.API_URL)
-            response.raise_for_status()
-            joke_data = response.json()
+        if data['error']:
             return {
-                'setup': joke_data.get('setup', ''),
-                'punchline': joke_data.get('punchline', ''),
-                'type': joke_data.get('type', 'general')
+                'error': True,
+                'message': 'Failed to fetch joke'
             }
-        except Exception as e:
-            print(f"Error fetching joke: {str(e)}")
+            
+        # Возвращаем шутку в зависимости от её типа
+        if data['type'] == 'twopart':
             return {
-                'setup': 'Why did the cargo truck feel lonely?',
-                'punchline': 'Because it had no trailer!',
-                'type': 'general'
-            }  # Fallback joke if API fails 
+                'error': False,
+                'type': 'twopart',
+                'setup': data['setup'],
+                'delivery': data['delivery']
+            }
+        else:
+            return {
+                'error': False,
+                'type': 'single',
+                'joke': data['joke']
+            }
+            
+    except requests.RequestException as e:
+        return {
+            'error': True,
+            'message': f'Error fetching joke: {str(e)}'
+        }
+    except (KeyError, ValueError) as e:
+        return {
+            'error': True,
+            'message': f'Error parsing joke response: {str(e)}'
+        } 

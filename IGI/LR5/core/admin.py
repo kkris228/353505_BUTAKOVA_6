@@ -3,17 +3,69 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.db.models import Avg, Count
 from django.utils.html import format_html
+from django.core.exceptions import ValidationError
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+import re
 from .models import (
     Organization, Driver, Vehicle, Client, Order, 
     Promotion, CargoType, Service, VehicleBodyType,
     Coupon
 )
 
+# Отменяем стандартную регистрацию User
+admin.site.unregister(User)
+
+# Регистрируем свою версию админки для User
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    add_form = UserCreationForm
+    form = UserChangeForm
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
+    search_fields = ('username', 'first_name', 'last_name', 'email')
+    ordering = ('username',)
+
+def validate_phone(value):
+    """
+    +375 (29) 123-45-67
+    +375291234567
+    375291234567
+    8 029 123-45-67
+    """
+    # Удаляем все не цифры для проверки длины
+    cleaned_number = re.sub(r'\D', '', value)
+    
+    # Проверяем длину (9 цифр для номера + 3 цифры код страны)
+    if len(cleaned_number) not in [12, 13]:  # 12 для формата 375... и 13 для +375...
+        raise ValidationError('Номер телефона должен содержать 12 или 13 цифр')
+    
+    # Проверяем формат с помощью регулярного выражения
+    patterns = [
+        r'^\+375 \(\d{2}\) \d{3}-\d{2}-\d{2}$',  # +375 (29) 123-45-67
+        r'^\+375\d{9}$',                          # +375291234567
+        r'^375\d{9}$',                            # 375291234567
+        r'^8 0\d{2} \d{3}-\d{2}-\d{2}$'          # 8 029 123-45-67
+    ]
+    
+    if not any(re.match(pattern, value) for pattern in patterns):
+        raise ValidationError(
+            'Неверный формат номера. Допустимые форматы:\n'
+            '+375 (29) 123-45-67\n'
+            '+375291234567\n'
+            '375291234567\n'
+            '8 029 123-45-67'
+        )
+
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ('name', 'address', 'phone', 'email')
     search_fields = ('name', 'address', 'phone', 'email')
     ordering = ('name',)
+    
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        validate_phone(phone)
+        return phone
 
 @admin.register(VehicleBodyType)
 class VehicleBodyTypeAdmin(admin.ModelAdmin):
@@ -63,6 +115,11 @@ class DriverAdmin(admin.ModelAdmin):
     def age(self, obj):
         return obj.age()
     age.short_description = 'Возраст'
+    
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        validate_phone(phone)
+        return phone
 
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
@@ -89,6 +146,11 @@ class ClientAdmin(admin.ModelAdmin):
     def get_orders_count(self, obj):
         return Order.objects.filter(client=obj).count()
     get_orders_count.short_description = 'Количество заказов'
+    
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        validate_phone(phone)
+        return phone
 
 @admin.register(Promotion)
 class PromotionAdmin(admin.ModelAdmin):
@@ -120,12 +182,9 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': ('pickup_address', 'delivery_address', 'pickup_date')
         }),
         ('Исполнение', {
-            'fields': ('driver', 'vehicle', 'status')
+            'fields': ('driver', 'vehicle', 'status', 'completed_at')
         }),
         ('Стоимость', {
             'fields': ('promotion', 'coupon', 'price')
-        }),
-        ('Даты', {
-            'fields': ('created_at', 'updated_at', 'completed_at')
         }),
     ) 

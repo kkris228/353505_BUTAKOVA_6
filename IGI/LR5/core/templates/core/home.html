@@ -1,10 +1,15 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container">
     <div class="text-center mb-5">
-        <h1 class="display-4">Добро пожаловать в систему грузоперевозок!</h1>
+        <h1 class="display-4">Система грузоперевозок!</h1>
         <p class="lead">Мы предоставляем надежные услуги по перевозке грузов по всей стране.</p>
+        <div class="current-datetime mb-4">
+            <h3 id="current-time" class="text-primary"></h3>
+            <p id="current-date" class="lead mb-0"></p>
+        </div>
     </div>
 
     <!-- Статистика -->
@@ -30,6 +35,20 @@
                 <div class="card-body">
                     <h3 class="card-title">Доступно транспорта</h3>
                     <p class="display-4">{{ available_vehicles|default:"0" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Календарь -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h2 class="text-center mb-4">{{ calendar_title }}</h2>
+                    <div class="text-calendar">
+                        <pre class="text-center">{{ calendar_text }}</pre>
+                    </div>
                 </div>
             </div>
         </div>
@@ -105,12 +124,12 @@
         </div>
     </div>
 
-    <!-- Для клиентов и водителей -->
+    <!-- Для клиентов -->
     <div class="row mb-4">
         <div class="col-12">
             <h2 class="text-center mb-4">Личный кабинет</h2>
         </div>
-        <div class="col-md-6 mb-4">
+        <div class="col-12 mb-4">
             <div class="card h-100 shadow">
                 <div class="card-body text-center">
                     <h4 class="card-title"><i class="bi bi-person"></i> Для клиентов</h4>
@@ -125,29 +144,28 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 shadow">
-                <div class="card-body text-center">
-                    <h4 class="card-title"><i class="bi bi-truck"></i> Для водителей</h4>
-                    <p class="card-text">Управляйте своими заказами и просматривайте маршруты доставки.</p>
-                    <div class="mt-auto">
-                        {% if user.is_authenticated and user.driver %}
-                            <a href="{% url 'order-list' %}" class="btn btn-primary">Мои заказы</a>
-                        {% else %}
-                            <a href="{% url 'login' %}" class="btn btn-primary">Войти</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="text-center mt-4">
-        <p class="text-muted">© {% now "Y" %} Грузоперевозки. Все права защищены.</p>
     </div>
 </div>
 
 <style>
+.text-calendar {
+    font-family: monospace;
+    font-size: 1.2em;
+    line-height: 1.5;
+}
+.text-calendar pre {
+    margin: 0;
+    white-space: pre;
+    font-family: monospace;
+    display: inline-block;
+    text-align: left;
+}
+.current-datetime {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    display: inline-block;
+}
 .card {
     transition: transform 0.2s ease-in-out;
 }
@@ -169,4 +187,62 @@
     box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
 }
 </style>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Текущее время
+function updateDateTime() {
+    const now = new Date();
+    
+    const timeOptions = { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: false,
+        timeZoneName: 'short'
+    };
+    document.getElementById('current-time').textContent = now.toLocaleTimeString('ru-RU', timeOptions);
+    
+    const dateOptions = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric'
+    };
+    document.getElementById('current-date').textContent = now.toLocaleDateString('ru-RU', dateOptions);
+}
+
+setInterval(updateDateTime, 1000);
+updateDateTime();
+
+// Диаграмма заказов для суперпользователя
+{% if user.is_superuser and orders_stats %}
+const statsData = {{ orders_stats|safe }};
+const ctx = document.getElementById('ordersChart').getContext('2d');
+new Chart(ctx, {
+    type: 'pie',
+    data: {
+        labels: statsData.labels,
+        datasets: [{
+            data: statsData.data,
+            backgroundColor: statsData.colors,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    boxWidth: 12
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}
 {% endblock %} 

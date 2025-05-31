@@ -10,51 +10,153 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db.models.functions import ExtractMonth
 from django.contrib.auth import login
-from datetime import date
+from datetime import date, datetime
 from django import forms
+import json
 
 from .models import (
     Organization, Driver, Vehicle, Client, Order, 
     Promotion, CargoType, Service, VehicleBodyType,
     Coupon, News, FAQ, Job, Review
 )
-from .forms import ClientRegistrationForm
-from .services import NewsService, JokeService
+from .forms import (
+    ClientRegistrationForm, VehicleForm, DriverForm,
+    NewsForm
+)
+from .services import get_random_joke
 
-class HomeView(ListView):
-    """Главная страница"""
-    model = Order
+def get_month_calendar(year=2025, month=5):
+    # Названия месяцев
+    month_names = [
+        'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+    ]
+    
+    # Определяем количество дней в месяце
+    days_in_month = {
+        1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
+        7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
+    }
+    
+    # Проверка на високосный год
+    if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0):
+        days_in_month[2] = 29
+    
+    # Определяем день недели для 1-го числа месяца
+    # Используем формулу Зеллера
+    if month < 3:
+        month += 12
+        year -= 1
+    k = year % 100
+    j = year // 100
+    h = (1 + ((13 * (month + 1)) // 5) + k + (k // 4) + (j // 4) - (2 * j)) % 7
+    # Преобразуем в формат где понедельник = 0, воскресенье = 6
+    first_day = (h + 5) % 7
+    
+    # Формируем календарь
+    cal_str = "Пн   Вт   Ср   Чт   Пт   Сб   Вс\n"
+    
+    # Добавляем отступы для первой недели
+    current_pos = 0
+    if first_day > 0:
+        cal_str += "     " * first_day
+        current_pos = first_day
+    
+    # Добавляем дни
+    for day in range(1, days_in_month[month % 12 or 12] + 1):
+        cal_str += f"{day:2}   "
+        current_pos += 1
+        if current_pos == 7:
+            cal_str = cal_str.rstrip() + "\n"
+            current_pos = 0
+    
+    return cal_str.rstrip(), f"Календарь - {month_names[month % 12 - 1]} {year}"
+
+def get_orders_statistics():
+    from .models import Order
+    
+    # Получаем статистику по статусам заказов
+    status_stats = Order.objects.values('status').annotate(
+        count=Count('id')
+    ).order_by('status')
+    
+    # Форматируем данные для диаграммы
+    labels = []
+    data = []
+    colors = {
+        'NEW': '#f1c40f',        # Желтый
+        'IN_PROGRESS': '#3498db', # Синий
+        'COMPLETED': '#2ecc71',   # Зеленый
+        'CANCELLED': '#e74c3c'    # Красный
+    }
+    background_colors = []
+    
+    total_orders = sum(stat['count'] for stat in status_stats)
+    
+    for stat in status_stats:
+        status_display = dict(Order.STATUS_CHOICES)[stat['status']]
+        percentage = (stat['count'] / total_orders) * 100 if total_orders > 0 else 0
+        labels.append(f"{status_display} ({percentage:.1f}%)")
+        data.append(stat['count'])
+        background_colors.append(colors.get(stat['status'], '#95a5a6'))
+    
+    return {
+        'labels': labels,
+        'data': data,
+        'colors': background_colors
+    }
+
+def get_cargo_statistics():
+    from .models import Order
+    
+    # Получаем статистику по типам грузов
+    cargo_stats = Order.objects.values('cargo_type__name').annotate(
+        count=Count('id'),
+        total_weight=Sum('weight'),
+        avg_cost=Avg('price')
+    ).order_by('-count')
+    
+    # Форматируем данные для диаграммы
+    labels = []
+    data = []
+    colors = [
+        '#2ecc71',  # Зеленый
+        '#3498db',  # Синий
+        '#9b59b6',  # Фиолетовый
+        '#f1c40f',  # Желтый
+        '#e74c3c',  # Красный
+        '#1abc9c',  # Бирюзовый
+        '#e67e22'   # Оранжевый
+    ]
+    
+    total_orders = sum(stat['count'] for stat in cargo_stats)
+    
+    for i, stat in enumerate(cargo_stats):
+        percentage = (stat['count'] / total_orders) * 100 if total_orders > 0 else 0
+        labels.append(f"{stat['cargo_type__name']} ({percentage:.1f}%)")
+        data.append(stat['count'])
+    
+    return {
+        'labels': labels,
+        'data': data,
+        'colors': colors[:len(data)]  # Берем только нужное количество цветов
+    }
+
+class HomeView(TemplateView):
     template_name = 'core/home.html'
-    context_object_name = 'orders'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        now = timezone.now()
         
-        # Статистика
+        # Добавляем статистику
         context['total_orders'] = Order.objects.count()
         context['active_drivers'] = Driver.objects.filter(is_available=True).count()
         context['available_vehicles'] = Vehicle.objects.filter(is_available=True).count()
         
-        # Публичная информация
-        context['vehicles'] = Vehicle.objects.filter(is_available=True).order_by('-created_at')[:6]  # Последние 6 доступных транспортных средств
-        context['drivers'] = Driver.objects.filter(is_available=True).order_by('-created_at')[:6]  # Последние 6 доступных водителей
-        context['services'] = Service.objects.filter(is_active=True).order_by('-created_at')[:6]  # Последние 6 активных услуг
-        
-        # Акции и скидки
-        context['promotions'] = Promotion.objects.filter(
-            is_active=True,
-            valid_from__lte=now,
-            valid_until__gte=now
-        ).order_by('-valid_until')[:3]  # 3 активных промокода, сортировка по сроку действия
-        
-        context['coupons'] = Coupon.objects.filter(
-            is_active=True,
-            valid_from__lte=now,
-            valid_until__gte=now
-        ).order_by('-valid_until')[:3]  # 3 активных купона, сортировка по сроку действия
-        
-        context['news'] = News.objects.all()[:5]  # Get latest 5 news articles
+        # Добавляем календарь
+        calendar_text, calendar_title = get_month_calendar(2025, 5)
+        context['calendar_text'] = calendar_text
+        context['calendar_title'] = calendar_title
         
         return context
 
@@ -156,6 +258,8 @@ class OrderCreateView(LoginRequiredMixin, CreateView):
         order = form.save(commit=False)
         if hasattr(self.request.user, 'client'):
             order.client = self.request.user.client
+        # Рассчитываем стоимость заказа
+        order.price = order.calculate_price()
         order.save()
         messages.success(self.request, 'Заказ успешно создан!')
         return super().form_valid(form)
@@ -239,11 +343,9 @@ class VehicleListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         
         return context
 
-class StatisticsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class StatisticsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     """Статистика заказов"""
-    model = Order
     template_name = 'core/statistics.html'
-    context_object_name = 'orders'
 
     def test_func(self):
         return self.request.user.is_superuser
@@ -259,7 +361,6 @@ class StatisticsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         total_revenue = orders.aggregate(total=Sum('price'))['total'] or 0
         context['total_revenue'] = round(total_revenue, 2)
         context['avg_order_cost'] = round(total_revenue / max(orders.count(), 1), 2)
-        context['active_orders'] = orders.filter(status='IN_PROGRESS').count()
         
         # Статистика по типам грузов
         context['cargo_stats'] = (
@@ -271,26 +372,6 @@ class StatisticsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             )
             .order_by('-order_count')
         )
-        
-        # Статистика по водителям
-        driver_stats = (
-            Order.objects.values(
-                'driver__user__first_name',
-                'driver__user__last_name'
-            )
-            .filter(driver__isnull=False)  # Исключаем заказы без водителей
-            .annotate(
-                order_count=Count('id'),
-                total_revenue=Sum('price'),
-                avg_rating=Avg('rating')
-            )
-            .order_by('-order_count')[:10]  # Топ-10 водителей
-        )
-        
-        # Преобразуем рейтинг в проценты и добавляем в контекст
-        for stat in driver_stats:
-            stat['rating'] = (stat['avg_rating'] or 0) * 20  # Преобразуем рейтинг 1-5 в проценты
-        context['driver_stats'] = driver_stats
         
         # Данные для графика по месяцам
         current_year = timezone.now().year
@@ -313,17 +394,17 @@ class StatisticsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         
         months = []
         orders_count = []
-        monthly_revenue = []
         
         for month in range(1, 13):
             month_data = next((item for item in months_data if item['month'] == month), None)
-            months.append(f'"{month_names[month - 1]}"')  # Добавляем кавычки для JSON
+            months.append(f'"{month_names[month - 1]}"')
             orders_count.append(month_data['count'] if month_data else 0)
-            monthly_revenue.append(round(month_data['revenue'] if month_data and month_data['revenue'] else 0, 2))
         
-        context['months'] = '[' + ','.join(months) + ']'  # Формируем JSON-массив
+        context['months'] = '[' + ','.join(months) + ']'
         context['orders_by_month'] = orders_count
-        context['revenue_by_month'] = monthly_revenue
+        
+        # Добавляем статистику по типам грузов для диаграммы
+        context['cargo_type_stats'] = json.dumps(get_cargo_statistics())
         
         return context
 
@@ -392,7 +473,7 @@ class PublicDriverListView(ListView):
     context_object_name = 'drivers'
     
     def get_queryset(self):
-        return Driver.objects.filter(is_available=True)
+        return Driver.objects.select_related('user').order_by('-experience')
 
 class PublicServiceListView(ListView):
     """Публичный список услуг"""
@@ -455,7 +536,9 @@ class NewsListView(ListView):
     template_name = 'core/news_list.html'
     context_object_name = 'news'
     paginate_by = 10
-    ordering = ['-published_at']
+    
+    def get_queryset(self):
+        return News.objects.filter(is_published=True).order_by('-created_at')
 
 class NewsDetailView(DetailView):
     """Детальная страница новости"""
@@ -465,6 +548,34 @@ class NewsDetailView(DetailView):
 
     def get_queryset(self):
         return News.objects.filter(is_published=True)
+
+class NewsCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    """Создание новости"""
+    model = News
+    form_class = NewsForm
+    template_name = 'core/news_form.html'
+    success_url = reverse_lazy('news-list')
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Новость успешно создана!')
+        return super().form_valid(form)
+
+class NewsUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Редактирование новости"""
+    model = News
+    form_class = NewsForm
+    template_name = 'core/news_form.html'
+    success_url = reverse_lazy('news-list')
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Новость успешно обновлена!')
+        return super().form_valid(form)
 
 class FAQListView(ListView):
     """Список вопросов и ответов"""
@@ -537,13 +648,134 @@ class PromotionCouponListView(ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['joke'] = JokeService.get_random_joke()
+        # Получаем случайную шутку
+        joke = get_random_joke()
+        if not joke.get('error', True):
+            if joke['type'] == 'twopart':
+                context['joke_setup'] = joke['setup']
+                context['joke_delivery'] = joke['delivery']
+            else:
+                context['joke'] = joke['joke']
         return context
 
 def home(request):
     context = {
         'total_orders': Order.objects.count() if 'Order' in globals() else 0,
-        'active_drivers': Driver.objects.filter(is_active=True).count() if 'Driver' in globals() else 0,
+        'active_drivers': Driver.objects.filter(is_available=True).count() if 'Driver' in globals() else 0,
         'available_vehicles': Vehicle.objects.filter(is_available=True).count() if 'Vehicle' in globals() else 0,
     }
-    return render(request, 'core/home.html', context) 
+    return render(request, 'core/home.html', context)
+
+class VehicleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    """Создание транспортного средства"""
+    model = Vehicle
+    form_class = VehicleForm
+    template_name = 'core/vehicle_form.html'
+    success_url = reverse_lazy('vehicle-list')
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Транспортное средство успешно добавлено!')
+        return super().form_valid(form)
+
+class VehicleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Редактирование транспортного средства"""
+    model = Vehicle
+    form_class = VehicleForm
+    template_name = 'core/vehicle_form.html'
+    success_url = reverse_lazy('vehicle-list')
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Транспортное средство успешно обновлено!')
+        return super().form_valid(form)
+
+@login_required
+def driver_list(request):
+    """Список водителей"""
+    if not request.user.is_superuser:
+        return redirect('home')
+    
+    # Получаем параметры фильтрации
+    availability = request.GET.get('availability')
+    min_experience = request.GET.get('min_experience')
+    
+    # Базовый QuerySet
+    drivers = Driver.objects.all()
+    
+    # Применяем фильтры
+    if availability in ['0', '1']:
+        drivers = drivers.filter(is_available=bool(int(availability)))
+    if min_experience:
+        drivers = drivers.filter(experience__gte=int(min_experience))
+    
+    # Статистика
+    all_drivers = Driver.objects.all()
+    context = {
+        'drivers': drivers,
+        'avg_age': round(sum(driver.age() for driver in all_drivers) / max(len(all_drivers), 1), 1),
+        'avg_experience': round(all_drivers.aggregate(Avg('experience'))['experience__avg'] or 0, 1),
+        'available_count': all_drivers.filter(is_available=True).count()
+    }
+    
+    return render(request, 'core/driver_list.html', context)
+
+@login_required
+def driver_create(request):
+    """Создание водителя"""
+    if not request.user.is_superuser:
+        return redirect('home')
+    
+    if request.method == 'POST':
+        form = DriverForm(request.POST, request.FILES)
+        if form.is_valid():
+            driver = form.save()
+            messages.success(request, 'Водитель успешно добавлен!')
+            return redirect('driver-list')
+    else:
+        form = DriverForm()
+    
+    return render(request, 'core/driver_form.html', {'form': form})
+
+@login_required
+def driver_update(request, pk):
+    """Редактирование водителя"""
+    if not request.user.is_superuser:
+        return redirect('home')
+    
+    driver = get_object_or_404(Driver, pk=pk)
+    
+    if request.method == 'POST':
+        form = DriverForm(request.POST, request.FILES, instance=driver)
+        if form.is_valid():
+            driver = form.save()
+            messages.success(request, 'Данные водителя успешно обновлены!')
+            return redirect('driver-list')
+    else:
+        form = DriverForm(instance=driver)
+    
+    return render(request, 'core/driver_form.html', {'form': form})
+
+@login_required
+def driver_delete(request, pk):
+    """Удаление водителя"""
+    if not request.user.is_superuser:
+        return redirect('home')
+    
+    driver = get_object_or_404(Driver, pk=pk)
+    
+    if request.method == 'POST':
+        driver.delete()
+        messages.success(request, 'Водитель успешно удален!')
+        return redirect('driver-list')
+    
+    return render(request, 'core/driver_confirm_delete.html', {'driver': driver})
+
+def public_driver_list(request):
+    """Публичный список водителей"""
+    drivers = Driver.objects.select_related('user').order_by('-experience')
+    return render(request, 'core/public/driver_list.html', {'drivers': drivers}) 

@@ -13,10 +13,14 @@
                 <div class="card-body text-center">
                     <h3 class="card-title mb-4">
                         <i class="bi bi-emoji-laughing text-warning"></i> 
-                        Шутка дня
+                        Программистская шутка
                     </h3>
-                    <p class="lead mb-3">{{ joke.setup }}</p>
-                    <p class="h4 text-primary">{{ joke.punchline }}</p>
+                    {% if joke_setup %}
+                        <p class="lead mb-3">{{ joke_setup }}</p>
+                        <p class="h4 text-primary">{{ joke_delivery }}</p>
+                    {% elif joke %}
+                        <p class="lead">{{ joke }}</p>
+                    {% endif %}
                     <small class="text-muted mt-2 d-block">Обновите страницу для новой шутки!</small>
                 </div>
             </div>
