@@ -1,0 +1,103 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-5">О нашей компании</h1>
+        </div>
+    </div>
+
+    <!-- Основная информация -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Кто мы?</h2>
+                    <p class="lead">
+                        Мы - надежная транспортная компания с многолетним опытом в сфере грузоперевозок. 
+                        Наша миссия - обеспечивать качественную и своевременную доставку грузов по всей стране.
+                    </p>
+                    <p>
+                        Основанная в 2020 году, наша компания постоянно развивается и совершенствует свои услуги, 
+                        чтобы максимально удовлетворять потребности наших клиентов.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Наши преимущества -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Наши преимущества</h2>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock display-4 mb-3 text-primary"></i>
+                    <h4 class="card-title">Пунктуальность</h4>
+                    <p class="card-text">Мы ценим ваше время и всегда доставляем грузы точно в срок.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-shield-check display-4 mb-3 text-primary"></i>
+                    <h4 class="card-title">Надежность</h4>
+                    <p class="card-text">Гарантируем сохранность вашего груза на всем пути следования.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-cash-coin display-4 mb-3 text-primary"></i>
+                    <h4 class="card-title">Доступные цены</h4>
+                    <p class="card-text">Предлагаем конкурентные цены и гибкую систему скидок.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Контактная информация -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Контактная информация</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-geo-alt"></i> Адрес</h5>
+                            <p>г. Минск, ул. Примерная, 123</p>
+                            
+                            <h5><i class="bi bi-telephone"></i> Телефон</h5>
+                            <p>+375 (29) 123-45-67</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-envelope"></i> Email</h5>
+                            <p>info@gruzoperevozki.by</p>
+                            
+                            <h5><i class="bi bi-clock"></i> Режим работы</h5>
+                            <p>Пн-Пт: 9:00 - 18:00<br>Сб-Вс: выходной</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.bi {
+    line-height: 1;
+}
+</style>
+{% endblock %} 

@@ -1,0 +1,60 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Наш автопарк</h2>
+    
+    <!-- Фильтры -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="body_type" class="form-label">Тип кузова</label>
+                    <select name="body_type" id="body_type" class="form-select">
+                        <option value="">Все типы</option>
+                        {% for type in body_types %}
+                        <option value="{{ type.id }}" {% if request.GET.body_type == type.id|stringformat:"s" %}selected{% endif %}>
+                            {{ type.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Список транспортных средств -->
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for vehicle in vehicles %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ vehicle.model }}</h5>
+                    <p class="card-text">
+                        <strong>Гос. номер:</strong> {{ vehicle.plate_number }}<br>
+                        <strong>Год выпуска:</strong> {{ vehicle.year }}<br>
+                        <strong>Грузоподъемность:</strong> {{ vehicle.capacity }} кг<br>
+                        <strong>Тип кузова:</strong> {{ vehicle.body_type.name }}<br>
+                        <strong>Статус:</strong> 
+                        {% if vehicle.is_available %}
+                            <span class="badge bg-success">Доступен</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Занят</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Транспортные средства не найдены
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

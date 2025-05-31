@@ -1,0 +1,66 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Наши водители</h2>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for driver in drivers %}
+        <div class="col">
+            <div class="card h-100">
+                {% if driver.photo %}
+                <img src="{{ driver.photo.url }}" class="card-img-top driver-photo" alt="{{ driver.user.get_full_name }}">
+                {% else %}
+                <div class="driver-photo-placeholder">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ driver.user.get_full_name }}</h5>
+                    <p class="card-text">
+                        <strong>Стаж:</strong> {{ driver.experience }} лет<br>
+                        <strong>Возраст:</strong> {{ driver.age }} лет<br>
+                        <strong>Статус:</strong> 
+                        {% if driver.is_available %}
+                            <span class="badge bg-success">Доступен</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Занят</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Водители не найдены
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.driver-photo {
+    height: 250px;
+    object-fit: cover;
+}
+.driver-photo-placeholder {
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+}
+.driver-photo-placeholder i {
+    font-size: 5rem;
+    color: #adb5bd;
+}
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+</style>
+{% endblock %} 

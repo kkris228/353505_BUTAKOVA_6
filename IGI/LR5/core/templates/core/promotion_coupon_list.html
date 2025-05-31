@@ -1,0 +1,103 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Акции и купоны - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center mb-5">Акции и купоны</h1>
+
+    <!-- Случайная шутка дня -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="card-title mb-4">
+                        <i class="bi bi-emoji-laughing text-warning"></i> 
+                        Программистская шутка
+                    </h3>
+                    {% if joke_setup %}
+                        <p class="lead mb-3">{{ joke_setup }}</p>
+                        <p class="h4 text-primary">{{ joke_delivery }}</p>
+                    {% elif joke %}
+                        <p class="lead">{{ joke }}</p>
+                    {% endif %}
+                    <small class="text-muted mt-2 d-block">Обновите страницу для новой шутки!</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Промокоды -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Действующие промокоды</h2>
+        </div>
+        {% for promotion in items.promotions %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">{{ promotion.code }}</h5>
+                        <span class="badge bg-success">-{{ promotion.discount_percent }}%</span>
+                    </div>
+                    <p class="card-text">{{ promotion.description }}</p>
+                    <div class="mt-auto">
+                        <small class="text-muted">
+                            Действует до {{ promotion.valid_until|date:"d.m.Y" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted">На данный момент нет действующих промокодов</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Купоны -->
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Действующие купоны</h2>
+        </div>
+        {% for coupon in items.coupons %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">{{ coupon.code }}</h5>
+                        <span class="badge bg-primary">-{{ coupon.fixed_discount }} руб.</span>
+                    </div>
+                    <p class="card-text">{{ coupon.description }}</p>
+                    <div class="mt-auto">
+                        <small class="text-muted">
+                            Действует до {{ coupon.valid_until|date:"d.m.Y" }}
+                            {% if coupon.one_time_use %}
+                            <br>Одноразовый купон
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted">На данный момент нет действующих купонов</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.badge {
+    font-size: 1rem;
+}
+</style>
+{% endblock %} 

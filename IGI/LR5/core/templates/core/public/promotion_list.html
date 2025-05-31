@@ -1,0 +1,41 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Акции и промокоды</h2>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for promotion in promotions %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Промокод: {{ promotion.code }}</h5>
+                    <p class="card-text">
+                        {{ promotion.description }}
+                    </p>
+                    <p class="card-text">
+                        <strong>Скидка:</strong> {{ promotion.discount_percent }}%<br>
+                        <strong>Действует до:</strong> {{ promotion.valid_until|date:"d.m.Y" }}<br>
+                        <strong>Для типов грузов:</strong><br>
+                        {% for cargo_type in promotion.cargo_types.all %}
+                        <span class="badge bg-info">{{ cargo_type.name }}</span>
+                        {% endfor %}
+                        <br>
+                        <strong>Для услуг:</strong><br>
+                        {% for service in promotion.services.all %}
+                        <span class="badge bg-secondary">{{ service.name }}</span>
+                        {% endfor %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                В данный момент нет активных акций
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

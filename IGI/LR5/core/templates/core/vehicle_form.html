@@ -1,0 +1,57 @@
+{% extends 'core/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h4 class="mb-0">{% if form.instance.pk %}Редактировать транспорт{% else %}Добавить транспорт{% endif %}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Основная информация -->
+                        <h5 class="mb-3">Информация о транспорте</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.model|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.plate_number|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.year|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.capacity|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.body_type|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.is_available|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}
+                                    <i class="bi bi-save"></i> Сохранить изменения
+                                {% else %}
+                                    <i class="bi bi-plus-circle"></i> Добавить транспорт
+                                {% endif %}
+                            </button>
+                            <a href="{% url 'vehicle-list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

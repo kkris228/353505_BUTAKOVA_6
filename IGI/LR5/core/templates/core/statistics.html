@@ -1,0 +1,150 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Статистика</h1>
+
+    <!-- Основные показатели -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Всего заказов</h5>
+                    <p class="display-4">{{ total_orders }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Общая выручка</h5>
+                    <p class="display-4">{{ total_revenue }} BYN</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Средняя стоимость заказа</h5>
+                    <p class="display-4">{{ avg_order_cost }} BYN</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Диаграммы -->
+    <div class="row mb-4">
+        <!-- Круговая диаграмма типов грузов -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Распределение по типам грузов</h5>
+                    <canvas id="cargoTypesChart" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- График заказов по месяцам -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Заказы по месяцам</h5>
+                    <canvas id="ordersMonthChart" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика по типам грузов -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Статистика по типам грузов</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Тип груза</th>
+                            <th>Количество заказов</th>
+                            <th>Общий вес (кг)</th>
+                            <th>Средняя стоимость</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in cargo_stats %}
+                        <tr>
+                            <td>{{ stat.cargo_type__name }}</td>
+                            <td>{{ stat.order_count }}</td>
+                            <td>{{ stat.total_weight|floatformat:1 }}</td>
+                            <td>{{ stat.avg_cost|floatformat:2 }} BYN</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Круговая диаграмма типов грузов
+const cargoData = {{ cargo_type_stats|safe }};
+const ctxCargo = document.getElementById('cargoTypesChart').getContext('2d');
+new Chart(ctxCargo, {
+    type: 'pie',
+    data: {
+        labels: cargoData.labels,
+        datasets: [{
+            data: cargoData.data,
+            backgroundColor: cargoData.colors,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    boxWidth: 12
+                }
+            }
+        }
+    }
+});
+
+// График заказов по месяцам
+const ctxMonth = document.getElementById('ordersMonthChart').getContext('2d');
+new Chart(ctxMonth, {
+    type: 'line',
+    data: {
+        labels: {{ months|safe }},
+        datasets: [{
+            label: 'Количество заказов',
+            data: {{ orders_by_month|safe }},
+            borderColor: '#3498db',
+            tension: 0.1,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+{% endblock %} 
