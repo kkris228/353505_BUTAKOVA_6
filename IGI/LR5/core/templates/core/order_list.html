@@ -1,0 +1,147 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4 mb-3">Мои заказы</h1>
+            {% if user.is_authenticated and not user.is_superuser and user.client %}
+            <a href="{% url 'order-create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Создать новый заказ
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if orders %}
+    <div class="row">
+        {% for order in orders %}
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
+                            <div class="display-6 text-primary">#{{ order.id }}</div>
+                            <small class="text-muted">{{ order.created_at|date:"d.m.Y" }}</small>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <h5 class="card-title mb-2">
+                                <i class="bi bi-box-seam me-2"></i>{{ order.cargo_type }}
+                            </h5>
+                            <p class="card-text mb-1">
+                                <i class="bi bi-truck me-2"></i>{{ order.service }}
+                            </p>
+                            <p class="card-text mb-0">
+                                <i class="bi bi-weight me-2"></i>{{ order.weight }} кг
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <div class="mb-2">
+                                <i class="bi bi-geo-alt text-success me-2"></i>
+                                <small class="text-muted">Откуда:</small><br>
+                                {{ order.pickup_address }}
+                            </div>
+                            <div>
+                                <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                                <small class="text-muted">Куда:</small><br>
+                                {{ order.delivery_address }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2 text-center text-md-end">
+                            <div class="h4 mb-3">{{ order.price }} BYN</div>
+                            <a href="{% url 'order-detail' order.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-info-circle me-1"></i>Подробнее
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <span class="badge {% if order.status == 'pending' %}bg-warning
+                                       {% elif order.status == 'in_progress' %}bg-info
+                                       {% elif order.status == 'completed' %}bg-success
+                                       {% elif order.status == 'cancelled' %}bg-danger
+                                       {% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                        {% if order.driver %}
+                        <div class="col text-end">
+                            <small class="text-muted">
+                                <i class="bi bi-person me-1"></i>Водитель: {{ order.driver.user.get_full_name }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav aria-label="Навигация по страницам" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-info" role="alert">
+                <i class="bi bi-info-circle me-2"></i>У вас пока нет заказов.
+                {% if user.is_authenticated and not user.is_superuser and user.client %}
+                <a href="{% url 'order-create' %}" class="alert-link">Создать первый заказ</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.badge {
+    font-size: 0.9rem;
+    padding: 0.5em 1em;
+}
+</style>
+{% endblock %} 

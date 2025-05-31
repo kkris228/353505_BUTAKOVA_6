@@ -1,0 +1,43 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Купоны на скидку</h2>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for coupon in coupons %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Купон: {{ coupon.code }}</h5>
+                    <p class="card-text">
+                        {{ coupon.description }}
+                    </p>
+                    <p class="card-text">
+                        <strong>Фиксированная скидка:</strong> {{ coupon.fixed_discount }} руб.<br>
+                        <strong>Действует до:</strong> {{ coupon.valid_until|date:"d.m.Y" }}<br>
+                        <strong>Тип использования:</strong> 
+                        {% if coupon.one_time_use %}
+                            <span class="badge bg-warning">Одноразовый</span>
+                        {% else %}
+                            <span class="badge bg-success">Многоразовый</span>
+                        {% endif %}
+                        <br>
+                        <strong>Для услуг:</strong><br>
+                        {% for service in coupon.services.all %}
+                        <span class="badge bg-secondary">{{ service.name }}</span>
+                        {% endfor %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                В данный момент нет активных купонов
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

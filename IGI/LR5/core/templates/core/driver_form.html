@@ -1,0 +1,90 @@
+{% extends 'core/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h4 class="mb-0">{% if form.instance.pk %}Редактировать водителя{% else %}Добавить водителя{% endif %}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Фотография -->
+                        <h5 class="mb-3">Фотография</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                {{ form.photo|as_crispy_field }}
+                            </div>
+                            {% if form.instance.photo %}
+                            <div class="col-md-6">
+                                <p>Текущая фотография:</p>
+                                <img src="{{ form.instance.photo.url }}" alt="Фото водителя" class="img-fluid rounded" style="max-height: 200px;">
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Личная информация -->
+                        <h5 class="mb-3">Личная информация</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.last_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.email|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.phone|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.birth_date|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Профессиональная информация -->
+                        <h5 class="mt-4 mb-3">Профессиональная информация</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.license_number|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.experience|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.is_available|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}
+                                    <i class="bi bi-save"></i> Сохранить изменения
+                                {% else %}
+                                    <i class="bi bi-plus-circle"></i> Добавить водителя
+                                {% endif %}
+                            </button>
+                            <a href="{% url 'driver-list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.img-preview {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: cover;
+}
+</style>
+{% endblock %} 

@@ -1,0 +1,69 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Наши услуги</h2>
+
+    <!-- Фильтры -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="min_price" class="form-label">Минимальная цена</label>
+                    <input type="number" class="form-control" id="min_price" name="min_price" 
+                           value="{{ request.GET.min_price }}" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label for="max_price" class="form-label">Максимальная цена</label>
+                    <input type="number" class="form-control" id="max_price" name="max_price" 
+                           value="{{ request.GET.max_price }}" min="0">
+                </div>
+                <div class="col-md-4">
+                    <label for="cargo_type" class="form-label">Тип груза</label>
+                    <select name="cargo_type" id="cargo_type" class="form-select">
+                        <option value="">Все типы</option>
+                        {% for type in cargo_types %}
+                        <option value="{{ type.id }}" {% if request.GET.cargo_type == type.id|stringformat:"s" %}selected{% endif %}>
+                            {{ type.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                    <a href="{% url 'public-service-list' %}" class="btn btn-secondary">Сбросить</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Список услуг -->
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for service in services %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ service.name }}</h5>
+                    <p class="card-text">
+                        {{ service.description }}
+                    </p>
+                    <p class="card-text">
+                        <strong>Цена:</strong> {{ service.price }} руб.<br>
+                        <strong>Доступно для грузов:</strong><br>
+                        {% for cargo_type in service.cargo_types.all %}
+                        <span class="badge bg-info">{{ cargo_type.name }}</span>
+                        {% endfor %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Услуги не найдены
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ news.title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'news-list' %}">Новости</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ news.title }}</li>
+        </ol>
+    </nav>
+
+    <article class="news-article">
+        <header class="mb-4">
+            <h1 class="display-4">{{ news.title }}</h1>
+            <div class="text-muted">
+                <small>
+                    Опубликовано: {{ news.created_at|date:"d.m.Y" }}
+                    {% if news.updated_at and news.updated_at != news.created_at %}
+                    | Обновлено: {{ news.updated_at|date:"d.m.Y" }}
+                    {% endif %}
+                </small>
+            </div>
+        </header>
+
+        {% if user.is_superuser %}
+        <div class="mb-4">
+            <a href="{% url 'news-update' news.pk %}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i> Редактировать
+            </a>
+        </div>
+        {% endif %}
+
+        {% if news.image %}
+        <div class="mb-4">
+            <img src="{{ news.image.url }}" class="img-fluid rounded" alt="{{ news.title }}">
+        </div>
+        {% endif %}
+
+        <div class="lead mb-4">
+            {{ news.description }}
+        </div>
+
+        <div class="news-content">
+            {{ news.content|linebreaks }}
+        </div>
+    </article>
+</div>
+
+<style>
+.news-article {
+    max-width: 800px;
+    margin: 0 auto;
+}
+.news-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+</style>
+{% endblock %} 

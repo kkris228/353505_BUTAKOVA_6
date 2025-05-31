@@ -1,0 +1,248 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="text-center mb-5">
+        <h1 class="display-4">Система грузоперевозок!</h1>
+        <p class="lead">Мы предоставляем надежные услуги по перевозке грузов по всей стране.</p>
+        <div class="current-datetime mb-4">
+            <h3 id="current-time" class="text-primary"></h3>
+            <p id="current-date" class="lead mb-0"></p>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title">Всего заказов</h3>
+                    <p class="display-4">{{ total_orders|default:"0" }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title">Активных водителей</h3>
+                    <p class="display-4">{{ active_drivers|default:"0" }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title">Доступно транспорта</h3>
+                    <p class="display-4">{{ available_vehicles|default:"0" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Календарь -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h2 class="text-center mb-4">{{ calendar_title }}</h2>
+                    <div class="text-calendar">
+                        <pre class="text-center">{{ calendar_text }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Публичная информация -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Информация о компании</h2>
+        </div>
+        
+        <!-- Транспорт -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-truck display-4 mb-3 text-primary"></i>
+                    <h4 class="card-title">Наш автопарк</h4>
+                    <p class="card-text">Ознакомьтесь с нашим современным автопарком грузовых автомобилей.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'public-vehicle-list' %}" class="btn btn-outline-primary">Посмотреть транспорт</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Водители -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-badge display-4 mb-3 text-primary"></i>
+                    <h4 class="card-title">Наши водители</h4>
+                    <p class="card-text">Опытные профессиональные водители с многолетним стажем.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'public-driver-list' %}" class="btn btn-outline-primary">Посмотреть водителей</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Услуги -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-gear display-4 mb-3 text-primary"></i>
+                    <h4 class="card-title">Услуги</h4>
+                    <p class="card-text">Широкий спектр услуг по грузоперевозкам с гибкими ценами.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'public-service-list' %}" class="btn btn-outline-primary">Посмотреть услуги</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Акции и скидки -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Акции и скидки</h2>
+        </div>
+        
+        <!-- Промокоды и купоны -->
+        <div class="col-12 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-tags display-4 mb-3 text-success"></i>
+                    <h4 class="card-title">Действующие акции и купоны</h4>
+                    <p class="card-text">Воспользуйтесь скидками и специальными предложениями для наших клиентов.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'promotion-coupon-list' %}" class="btn btn-outline-success">Посмотреть акции и купоны</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Для клиентов -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Личный кабинет</h2>
+        </div>
+        <div class="col-12 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center">
+                    <h4 class="card-title"><i class="bi bi-person"></i> Для клиентов</h4>
+                    <p class="card-text">Создавайте заказы и отслеживайте их выполнение в режиме реального времени.</p>
+                    <div class="mt-auto">
+                        {% if user.is_authenticated and user.client %}
+                            <a href="{% url 'order-create' %}" class="btn btn-primary">Создать заказ</a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-primary">Войти</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.text-calendar {
+    font-family: monospace;
+    font-size: 1.2em;
+    line-height: 1.5;
+}
+.text-calendar pre {
+    margin: 0;
+    white-space: pre;
+    font-family: monospace;
+    display: inline-block;
+    text-align: left;
+}
+.current-datetime {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    display: inline-block;
+}
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.card-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.mt-auto {
+    margin-top: auto;
+}
+.shadow {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
+}
+</style>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Текущее время
+function updateDateTime() {
+    const now = new Date();
+    
+    const timeOptions = { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: false,
+        timeZoneName: 'short'
+    };
+    document.getElementById('current-time').textContent = now.toLocaleTimeString('ru-RU', timeOptions);
+    
+    const dateOptions = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric'
+    };
+    document.getElementById('current-date').textContent = now.toLocaleDateString('ru-RU', dateOptions);
+}
+
+setInterval(updateDateTime, 1000);
+updateDateTime();
+
+// Диаграмма заказов для суперпользователя
+{% if user.is_superuser and orders_stats %}
+const statsData = {{ orders_stats|safe }};
+const ctx = document.getElementById('ordersChart').getContext('2d');
+new Chart(ctx, {
+    type: 'pie',
+    data: {
+        labels: statsData.labels,
+        datasets: [{
+            data: statsData.data,
+            backgroundColor: statsData.colors,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    boxWidth: 12
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}
+{% endblock %} 

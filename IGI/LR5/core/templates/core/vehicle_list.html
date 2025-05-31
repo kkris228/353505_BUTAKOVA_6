@@ -1,0 +1,116 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Управление транспортом</h2>
+        <a href="{% url 'vehicle-create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Добавить транспорт
+        </a>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="body_type" class="form-label">Тип кузова</label>
+                    <select name="body_type" id="body_type" class="form-select">
+                        <option value="">Все типы</option>
+                        {% for type in body_types %}
+                        <option value="{{ type.id }}" {% if request.GET.body_type == type.id|stringformat:"s" %}selected{% endif %}>
+                            {{ type.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="availability" class="form-label">Статус</label>
+                    <select name="availability" id="availability" class="form-select">
+                        <option value="">Все</option>
+                        <option value="1" {% if request.GET.availability == '1' %}selected{% endif %}>Доступен</option>
+                        <option value="0" {% if request.GET.availability == '0' %}selected{% endif %}>Занят</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="min_capacity" class="form-label">Мин. грузоподъемность (кг)</label>
+                    <input type="number" class="form-control" id="min_capacity" name="min_capacity" value="{{ request.GET.min_capacity }}">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Общая грузоподъемность</h5>
+                    <p class="display-6">{{ total_capacity|floatformat:0 }} кг</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Средний возраст</h5>
+                    <p class="display-6">{{ avg_age }} лет</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Доступно</h5>
+                    <p class="display-6">{{ available_count }} ед.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список транспорта -->
+    <div class="row">
+        {% for vehicle in vehicles %}
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <h5 class="card-title mb-1">{{ vehicle.model }}</h5>
+                            <p class="text-muted mb-0">{{ vehicle.plate_number }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Тип:</strong> {{ vehicle.body_type }}</p>
+                            <p class="mb-0"><strong>Год:</strong> {{ vehicle.year }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Грузоподъемность:</strong> {{ vehicle.capacity }} кг</p>
+                            <p class="mb-0">
+                                <strong>Статус:</strong>
+                                <span class="badge {% if vehicle.is_available %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if vehicle.is_available %}Доступен{% else %}Занят{% endif %}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <a href="{% url 'vehicle-update' vehicle.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil"></i> Редактировать
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Транспортные средства не найдены
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

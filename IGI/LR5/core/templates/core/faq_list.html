@@ -1,0 +1,122 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Словарь терминов и понятий - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center mb-4">Словарь терминов и понятий</h1>
+    
+    <!-- Поиск -->
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="searchInput" class="form-control" placeholder="Поиск по словарю...">
+            </div>
+        </div>
+    </div>
+    
+    <div class="accordion" id="faqAccordion">
+        {% for faq in faqs %}
+        <div class="accordion-item faq-item">
+            <h2 class="accordion-header" id="heading{{ faq.pk }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#collapse{{ faq.pk }}" aria-expanded="false" 
+                        aria-controls="collapse{{ faq.pk }}">
+                    {{ faq.question }}
+                </button>
+            </h2>
+            <div id="collapse{{ faq.pk }}" class="accordion-collapse collapse" 
+                 aria-labelledby="heading{{ faq.pk }}" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    {{ faq.answer|linebreaks }}
+                    <p class="text-muted mt-2">
+                        <small>Добавлено: {{ faq.created_at|date:"d.m.Y" }}</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">
+            На данный момент словарь пуст.
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav aria-label="Навигация по страницам" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+.accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+    color: #0d6efd;
+}
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: rgba(0,0,0,.125);
+}
+.accordion-item {
+    margin-bottom: 0.5rem;
+    border-radius: 0.25rem !important;
+}
+.accordion-button {
+    border-radius: 0.25rem !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const faqItems = document.querySelectorAll('.faq-item');
+    
+    searchInput.addEventListener('input', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        
+        faqItems.forEach(item => {
+            const question = item.querySelector('.accordion-button').textContent.toLowerCase();
+            const answer = item.querySelector('.accordion-body').textContent.toLowerCase();
+            
+            if (question.includes(searchText) || answer.includes(searchText)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 
