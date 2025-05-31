@@ -1,0 +1,7 @@
+He3llo! This is a sample text to analyze.
+How many sentences does it have? Let's check.
+Smileys are fun :) ;-----)))) and ;---------[[[[[[[[ too!
+Some words like Data123 or Version2 are capitalized and contain digits.
+Is #FF3421 a color code? What about #00ff00 or #123abc? No, #fd2 is invalid.
+Short words a I be we he it.
+Does the word printer or answer appear here? Let's see.

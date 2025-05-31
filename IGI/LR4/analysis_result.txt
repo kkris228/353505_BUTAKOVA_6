@@ -1,0 +1,12 @@
+Total sentences: 12
+Declarative sentences: 6
+Interrogative sentences: 4
+Imperative sentences: 2
+Average sentence length (chars, words only): 22
+Average word length (chars): 4
+Number of smileys: 3
+Words starting with capital and containing digits: He3llo, Data123, Version2, FF3421
+Hex color codes found: #FF3421, #00ff00, #123abc
+Number of words with minimal length: 6
+Words followed by a dot: analyze, check, digits, invalid, it, see
+Longest word ending with 'r': printer
